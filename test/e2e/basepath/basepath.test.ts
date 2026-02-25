@@ -1,4 +1,3 @@
-import url from 'url'
 import assert from 'assert'
 import cheerio from 'cheerio'
 import webdriver from 'next-webdriver'
@@ -126,33 +125,26 @@ describe('basePath', () => {
           '/gssp'
         )
 
-        await check(
-          async () => {
-            const links = await browser.elementsByCss('link[rel=prefetch]')
+        await check(async () => {
+          const links = await browser.elementsByCss('link[rel=prefetch]')
 
-            for (const link of links) {
-              const href = await link.getAttribute('href')
-              if (href.includes(chunk)) {
-                return true
-              }
+          for (const link of links) {
+            const href = await link.getAttribute('href')
+            if (href.includes(chunk)) {
+              return true
             }
-
-            const scripts = await browser.elementsByCss('script')
-
-            for (const script of scripts) {
-              const src = await script.getAttribute('src')
-              if (src.includes(chunk)) {
-                return true
-              }
-            }
-            return false
-          },
-          {
-            test(result) {
-              return result === true
-            },
           }
-        )
+
+          const scripts = await browser.elementsByCss('script')
+
+          for (const script of scripts) {
+            const src = await script.getAttribute('src')
+            if (src.includes(chunk)) {
+              return true
+            }
+          }
+          return false
+        }, true)
       })
 
       it('should prefetch pages correctly in viewport with <Link>', async () => {
@@ -463,14 +455,14 @@ describe('basePath', () => {
   it('should have correct href for a link', async () => {
     const browser = await webdriver(next.url, `${basePath}/hello`)
     const href = await browser.elementByCss('a').getAttribute('href')
-    const { pathname } = url.parse(href)
+    const { pathname } = new URL(href, await browser.url())
     expect(pathname).toBe(`${basePath}/other-page`)
   })
 
   it('should have correct href for a link to /', async () => {
     const browser = await webdriver(next.url, `${basePath}/link-to-root`)
     const href = await browser.elementByCss('#link-back').getAttribute('href')
-    const { pathname } = url.parse(href)
+    const { pathname } = new URL(href, await browser.url())
     expect(pathname).toBe(`${basePath}`)
   })
 
